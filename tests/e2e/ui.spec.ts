@@ -79,3 +79,29 @@ test('360px mobile homepage, playbook, stats, practice game, and data page remai
   await expect(page.getByRole('heading', { name: 'An independent game for football fans' })).toBeVisible();
   await noHorizontalOverflow(page); expect(pageErrors).toEqual([]);
 });
+
+test('keyboard autocomplete selects a sourced correct answer and the awarded result survives refresh', async ({ page }) => {
+  const { getQuestion } = await import('../../lib/questions');
+  const { resolveEntity } = await import('../../lib/nfl');
+  await startDaily(page);
+  const state = await page.request.get('/api/game');
+  const game = (await state.json()).game;
+  const question = getQuestion(game.current.question.id)!;
+  const answer = question.answers.find(item => resolveEntity(item.name, question.entityType).length === 1)!;
+  expect(answer).toBeTruthy();
+  const input = page.getByRole('combobox');
+  await input.fill(answer.name);
+  await expect(page.getByRole('listbox', { name: 'NFL names' })).toBeVisible();
+  await expect(page.getByRole('listbox', { name: 'NFL names' })).not.toContainText(/GOAT|Pro Bowler|PTS/);
+  await input.press('ArrowDown');
+  await input.press('Enter');
+  await expect(input).toHaveValue(answer.name);
+  await page.getByRole('button', { name: 'LOCK IT IN' }).click();
+  await expect(page.getByRole('heading', { name: answer.name, exact: true })).toBeVisible();
+  await expect(page.locator('.result-points')).toHaveText(`+${answer.points}POINTS`);
+  await expect(page.locator('.result-evidence')).toHaveText(answer.evidence);
+  await page.reload();
+  await page.getByRole('button', { name: /RESUME TODAY’S GAME/ }).click();
+  await expect(page.locator('.result-points')).toHaveText(`+${answer.points}POINTS`);
+  await expect(page.getByRole('button', { name: 'NEXT ROUND' })).toBeEnabled();
+});
