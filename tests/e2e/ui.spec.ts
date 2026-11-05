@@ -66,6 +66,19 @@ test('360px mobile homepage, playbook, stats, practice game, and data page remai
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.getByRole('button', { name: 'Enable sounds' }).click();
   await expect(page.getByRole('button', { name: 'Mute sounds' })).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('footer').getByRole('button', { name: 'Archive', exact: true }).click();
+  await expect(page.getByRole('dialog')).toContainText('THE FILM ROOM');
+  await expect(page.getByRole('dialog')).toContainText('Archive games are unranked');
+  const archive = await page.request.get('/api/archive');
+  const published = (await archive.json()).dates as string[];
+  if (!published.length) {
+    await expect(page.getByRole('dialog')).toContainText('No previous challenges have been published yet.');
+    await expect(page.getByRole('button', { name: 'PLAY THIS CHALLENGE' })).toBeDisabled();
+  } else {
+    await expect(page.getByRole('dialog').getByRole('combobox')).toBeEnabled();
+  }
+  await noHorizontalOverflow(page);
+  await page.getByRole('button', { name: 'Close dialog' }).click();
   await page.getByRole('button', { name: /ONE GAME IS NEVER ENOUGH/ }).click();
   await page.getByRole('button', { name: 'START A PRACTICE GAME' }).click();
   await expect(page.getByText('UNLIMITED · UNRANKED')).toBeVisible();
