@@ -1,0 +1,6 @@
+{
+ "name":"bradyillion","version":"0.1.0","private":true,"engines":{"node":">=22 <25"},
+ "scripts":{"dev":"next dev --hostname 0.0.0.0","build":"next build --webpack","start":"next start --hostname 0.0.0.0 -p ${PORT:-3000}","typecheck":"tsc --noEmit","lint":"eslint .","test":"vitest run","test:e2e":"playwright test","data:import":"python3 scripts/import-data.py","data:generate":"node --import tsx scripts/questions.ts","data:audit":"node --import tsx scripts/questions.ts --audit","questions:generate":"node --import tsx scripts/questions.ts","questions:audit":"node --import tsx scripts/questions.ts --audit"},
+ "dependencies":{"@electric-sql/pglite":"0.3.16","lucide-react":"0.468.0","next":"16.4.5","pg":"8.23.1","react":"19.3.1","react-dom":"19.3.1","zod":"4.6.7"},
+ "devDependencies":{"@playwright/test":"1.64.1","@tailwindcss/postcss":"4.3.4","@types/node":"24.19.2","@types/pg":"8.23.1","@types/react":"19.3.0","@types/react-dom":"19.3.0","eslint":"9.39.5","eslint-config-next":"16.4.5","tailwindcss":"4.3.4","tsx":"4.23.15","typescript":"5.9.3","vitest":"3.2.7"}
+}

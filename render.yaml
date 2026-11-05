@@ -1,0 +1,31 @@
+# Connect this repository with Render's New > Blueprint.
+services:
+  - type: web
+    name: bradyillion
+    runtime: node
+    plan: free
+    region: oregon
+    branch: main
+    buildCommand: npm ci --no-audit --no-fund && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: 24.22.1
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bradyillion-db
+          property: connectionString
+      - key: ADMIN_TOKEN
+        generateValue: true
+# The free database expires after 30 days; upgrade before retaining real users.
+databases:
+  - name: bradyillion-db
+    plan: free
+    region: oregon
+    databaseName: bradyillion
+    user: bradyillion
+    ipAllowList: []
