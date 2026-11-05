@@ -11,8 +11,8 @@ export default defineConfig({
       ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : undefined,
   },
   webServer: process.env.E2E_BASE_URL ? undefined : {
-    command: 'npm run dev -- --port 3100', url: baseURL,
+    command: 'npm start', url: baseURL,
     reuseExistingServer: !process.env.CI, timeout: 120_000,
-    env: { LOCAL_DATABASE_PATH: `/tmp/bradyillion-e2e-${process.pid}` },
+    env: { PORT: '3100', LOCAL_DATABASE_PATH: `/tmp/bradyillion-e2e-${process.pid}` },
   },
 });
