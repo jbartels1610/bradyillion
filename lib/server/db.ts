@@ -19,11 +19,11 @@ interface State {pool?:Pool;local?:PGlite;ready?:Promise<void>;tail:Promise<unkn
 const globals=globalThis as typeof globalThis&{bradyDb?:State};
 const state=globals.bradyDb??={tail:Promise.resolve()};
 async function initialize(){
- if(process.env.DATABASE_URL){const {Pool:PgPool}=await import('pg');state.pool=new PgPool({connectionString:process.env.DATABASE_URL,max:10});await state.pool.query(schema);}
- else {const {PGlite:LocalPg}=await import('@electric-sql/pglite');const path=resolve(process.env.LOCAL_DATABASE_PATH||'.data/postgres');mkdirSync(path,{recursive:true});state.local=new LocalPg(path);await state.local.exec(schema);}
+ if(process.env.DATABASE_URL){const {Pool:PgPool}=await import('pg');state.pool??=new PgPool({connectionString:process.env.DATABASE_URL,max:10});await state.pool.query(schema);}
+ else {const {PGlite:LocalPg}=await import('@electric-sql/pglite');const path=resolve(process.env.LOCAL_DATABASE_PATH||'.data/postgres');mkdirSync(path,{recursive:true});state.local??=new LocalPg(path);await state.local.exec(schema);}
 }
 export async function transaction<T>(work:(db:Queryable)=>Promise<T>):Promise<T>{
- await(state.ready??=initialize());
+ await(state.ready??=initialize().catch(async error=>{state.ready=undefined;if(state.pool){const failed=state.pool;state.pool=undefined;await failed.end().catch(()=>undefined);}throw error;}));
  const execute=async()=>{const rawClient=state.pool?await state.pool.connect():state.local!;const client=rawClient as unknown as Queryable;
  try {await client.query('BEGIN');if(state.pool)await client.query('SELECT pg_advisory_xact_lock(719301)');const result=await work(client);await client.query('COMMIT');return result;}
  catch(error){await client.query('ROLLBACK');throw error;}finally{if(state.pool)(rawClient as PoolClient).release();}};
