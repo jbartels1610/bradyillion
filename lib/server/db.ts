@@ -2,11 +2,12 @@ import {mkdirSync} from 'node:fs';
 import {resolve} from 'node:path';
 import type {Pool,PoolClient} from 'pg';
 import type {PGlite} from '@electric-sql/pglite';
+import manifest from '../../data/manifest.json';
 export interface Queryable {query<T extends Record<string,unknown>=Record<string,unknown>>(sql:string,params?:unknown[]):Promise<{rows:T[]}>}
 const schema=`
 CREATE TABLE IF NOT EXISTS anonymous_players(id TEXT PRIMARY KEY,nickname TEXT NOT NULL,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
-CREATE TABLE IF NOT EXISTS daily_challenges(date TEXT PRIMARY KEY,questions JSONB NOT NULL,dataset_version TEXT NOT NULL DEFAULT 'nflverse-1999-2024-v1',created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
-ALTER TABLE daily_challenges ADD COLUMN IF NOT EXISTS dataset_version TEXT NOT NULL DEFAULT 'nflverse-1999-2024-v1';
+CREATE TABLE IF NOT EXISTS daily_challenges(date TEXT PRIMARY KEY,questions JSONB NOT NULL,dataset_version TEXT NOT NULL DEFAULT '${manifest.version.replace(/'/g,"''")}',created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+ALTER TABLE daily_challenges ADD COLUMN IF NOT EXISTS dataset_version TEXT NOT NULL DEFAULT '${manifest.version.replace(/'/g,"''")}';
 CREATE TABLE IF NOT EXISTS game_sessions(id TEXT PRIMARY KEY,player_id TEXT NOT NULL REFERENCES anonymous_players(id),mode TEXT NOT NULL,date TEXT NOT NULL,state JSONB NOT NULL,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),finished_at TIMESTAMPTZ);
 CREATE UNIQUE INDEX IF NOT EXISTS one_ranked_attempt ON game_sessions(player_id,date) WHERE mode='daily';
 CREATE INDEX IF NOT EXISTS player_games ON game_sessions(player_id,created_at DESC);

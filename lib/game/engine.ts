@@ -11,7 +11,7 @@ export interface Feedback {kind:'unknown'|'ambiguous'|'incorrect'|'preview';mess
 export class GameError extends Error {constructor(message:string,public status=400){super(message);}}
 export function createGame(id:string,playerId:string,mode:Mode,date:string,questions:Question[],now:number):Game {
  if(questions.length!==ROUND_COUNT)throw new GameError('A challenge must contain exactly seven questions.');
- return {id,playerId,mode,date,phase:'intro',roundIndex:0,createdAt:now,finishedAt:null,datasetVersion:'nflverse-1999-2024-v1',rounds:questions.map(question=>({question:structuredClone(question),previewEndsAt:null,deadline:null,incorrectAttempts:0,submissions:[],result:null}))};
+ return {id,playerId,mode,date,phase:'intro',roundIndex:0,createdAt:now,finishedAt:null,datasetVersion:questions[0].dataVersion,rounds:questions.map(question=>({question:structuredClone(question),previewEndsAt:null,deadline:null,incorrectAttempts:0,submissions:[],result:null}))};
 }
 function miss(round:Round,reason:string){round.result={answer:'',entityId:null,points:0,tier:'Miss',evidence:'',source:'',reason};}
 export function syncClock(game:Game,now:number):Game {

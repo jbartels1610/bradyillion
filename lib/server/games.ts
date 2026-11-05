@@ -4,10 +4,11 @@ import {selectQuestions,utcDate} from '../daily';
 import {resolveEntity} from '../nfl';
 import {transaction,type Queryable} from './db';
 import type {Question} from '../questions';
-export const DATA_VERSION='nflverse-1999-2024-v1';
+import manifest from '../../data/manifest.json';
+export const DATA_VERSION=manifest.version;
 const NICKNAMES=['Pocket','Audible','Huddle','Blitz','Sideline','Redzone','Endzone','Spiral'];
 async function ensurePlayer(db:Queryable,id:string){const nickname=`${NICKNAMES[parseInt(id.replace(/-/g,'').slice(0,2),16)%8]} ${id.slice(0,5).toUpperCase()}`;await db.query('INSERT INTO anonymous_players(id,nickname) VALUES($1,$2) ON CONFLICT DO NOTHING',[id,nickname]);}
-async function frozenChallenge(db:Queryable,date:string):Promise<Question[]>{const existing=await db.query<{questions:Question[]}>('SELECT questions FROM daily_challenges WHERE date=$1',[date]);if(existing.rows[0])return existing.rows[0].questions;const questions=selectQuestions(`bradyillion-v1:${date}`);await db.query('INSERT INTO daily_challenges(date,questions) VALUES($1,$2)',[date,JSON.stringify(questions)]);return questions;}
+async function frozenChallenge(db:Queryable,date:string):Promise<Question[]>{const existing=await db.query<{questions:Question[]}>('SELECT questions FROM daily_challenges WHERE date=$1',[date]);if(existing.rows[0])return existing.rows[0].questions;const questions=selectQuestions(`bradyillion-v1:${date}`);await db.query('INSERT INTO daily_challenges(date,questions,dataset_version) VALUES($1,$2,$3)',[date,JSON.stringify(questions),DATA_VERSION]);return questions;}
 export async function prepareChallenges(){await transaction(async db=>{const midnight=Date.parse(utcDate());for(let day=0;day<=7;day++)await frozenChallenge(db,utcDate(midnight+day*86400000));});}
 async function persist(db:Queryable,game:Game){await db.query('UPDATE game_sessions SET state=$2,finished_at=$3 WHERE id=$1',[game.id,JSON.stringify(game),game.finishedAt?new Date(game.finishedAt).toISOString():null]);}
 async function ownedGame(db:Queryable,id:string,playerId:string){const found=await db.query<{state:Game}>('SELECT state FROM game_sessions WHERE id=$1 AND player_id=$2 FOR UPDATE',[id,playerId]);if(!found.rows[0])throw new GameError('Game not found.',404);return found.rows[0].state;}
