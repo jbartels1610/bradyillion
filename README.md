@@ -4,6 +4,10 @@ Seven rounds. Twenty-five seconds. Rare answers win.
 
 An independent NFL knowledge game built with Next.js, React, TypeScript, PostgreSQL, and versioned nflverse records. See [the full product specification](docs/PRODUCT_SPEC.md), [data definitions](docs/DATA.md), and [implementation status](docs/STATUS.md).
 
+![Bradyillion desktop preview](docs/preview.png)
+
+See [validation evidence](docs/VALIDATION.md) and the [mobile preview](docs/preview-mobile.png).
+
 ## Run
 
 Node 22–24 and npm:
