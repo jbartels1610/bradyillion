@@ -5,7 +5,18 @@ import {ZodError} from 'zod';
 import {transaction} from './db';
 import {GameError} from '../game/engine';
 export async function identity(){const jar=await cookies(),existing=jar.get('bradyillion_player')?.value;if(existing&&/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(existing))return existing;const id=randomUUID();jar.set('bradyillion_player',id,{httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:'lax',path:'/',maxAge:60*60*24*365});return id;}
-export function checkOrigin(request:Request){const origin=request.headers.get('origin');if(request.headers.get('sec-fetch-site')==='cross-site')throw new GameError('Cross-site requests are not permitted.',403);if(origin&&origin!==new URL(request.url).origin&&origin!==process.env.APP_URL&&origin!==process.env.RENDER_EXTERNAL_URL)throw new GameError('Origin is not allowed.',403);}
+export function checkOrigin(request:Request){
+ const origin=request.headers.get('origin');
+ if(request.headers.get('sec-fetch-site')==='cross-site')throw new GameError('Cross-site requests are not permitted.',403);
+ if(!origin)return;
+ const url=new URL(request.url);
+ // Next may use its internal listening hostname in request.url. Browsers cannot
+ // override Host, so compare the actual HTTP target as well as configured origins.
+ // Never use arbitrary X-Forwarded-Host values to authorize a mutation.
+ const host=request.headers.get('host');
+ const actualTarget=host?`${url.protocol}//${host}`:url.origin;
+ if(![url.origin,actualTarget,process.env.APP_URL,process.env.RENDER_EXTERNAL_URL].includes(origin))throw new GameError('Origin is not allowed.',403);
+}
 export async function rateLimit(key:string,limit=80,windowMs=60000){await transaction(async db=>{const now=Date.now();await db.query('DELETE FROM rate_limits WHERE expires_at<$1',[now]);const result=await db.query<{hits:number}>('INSERT INTO rate_limits(key,hits,expires_at) VALUES($1,1,$2) ON CONFLICT(key) DO UPDATE SET hits=CASE WHEN rate_limits.expires_at<$3 THEN 1 ELSE rate_limits.hits+1 END,expires_at=CASE WHEN rate_limits.expires_at<$3 THEN $2 ELSE rate_limits.expires_at END RETURNING hits',[key,now+windowMs,now]);if(result.rows[0].hits>limit)throw new GameError('Too many requests. Please wait a minute.',429);});}
 export async function guard(request:Request,playerId:string,mutation=false){if(mutation)checkOrigin(request);const ip=request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()||'local';await rateLimit(`player:${mutation?'write':'read'}:${playerId}`,mutation?80:300);await rateLimit(`ip:${ip}`,600);}
 export function requireAdmin(request:Request){const expected=process.env.ADMIN_TOKEN;if(!expected||expected.length<24)throw new GameError('Admin access is disabled until ADMIN_TOKEN is configured with at least 24 characters.',503);const actual=request.headers.get('authorization')?.replace(/^Bearer /,'')||'';const a=Buffer.from(actual),b=Buffer.from(expected);if(a.length!==b.length||!timingSafeEqual(a,b))throw new GameError('Unauthorized.',401);}

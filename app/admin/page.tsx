@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useRef, useState, type CSSProperties, type FormEvent } from "react";
-import Link from "next/link";
 
 type Answer = { entityId: string; name: string; points: number; tier: string; evidence: string; source: string };
 type Question = { id: string; text: string; category: string; answers: Answer[] };
