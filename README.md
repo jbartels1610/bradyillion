@@ -37,7 +37,7 @@ npm run test:e2e
 
 ## Render preview
 
-[Deploy to Render](https://render.com/deploy?repo=https://github.com/jbartels1610/bradyillion), or choose **New → Blueprint** in Render, connect this repository, and select `main`. Review/apply `render.yaml`; it creates the web app and PostgreSQL and generates an admin token. When the build and `/api/health` succeed, open the Render-assigned HTTPS address. See [deployment details](docs/DEPLOYMENT.md).
+[Deploy to Render](https://render.com/deploy?repo=https://github.com/jbartels1610/bradyillion), or choose **New → Blueprint** in Render, connect this repository, and select `main`. Review/apply `render.yaml`; its production build explicitly installs the required build tools with `npm ci --include=dev`, and it creates the web app and PostgreSQL and generates an admin token. When the build and `/api/health` succeed, open the Render-assigned HTTPS address. See [deployment details](docs/DEPLOYMENT.md).
 
 Free web instances may sleep, and free PostgreSQL expires after 30 days. Review current Render pricing before applying. Upgrade before retaining real user progress. A source commit and Blueprint do not themselves create a live deployment.
 

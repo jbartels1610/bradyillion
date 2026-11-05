@@ -1,6 +1,6 @@
 # Validation and preview readiness
 
-The current application was validated in this cloud workspace. GitHub Actions is configured; its remote execution has not been independently observed. A Render deployment has not been created because this session has no Render account credentials. Apply the checked-in Blueprint in Render to create the public URL.
+The current application was validated in this cloud workspace. GitHub Actions is configured; its remote execution has not been independently observed. The user manages the Render deployment; this workspace has no Render account credentials, so hosted deployment success has not been independently verified. See the production-install regression below.
 
 ## Executed checks
 
@@ -40,3 +40,11 @@ Full audit is checked in at `data/question-audit.json`. Import provenance, sourc
 The full specification is preserved in `docs/PRODUCT_SPEC.md`. This preview does not claim complete all-time data, coaching/award/Super Bowl/defensive-statistic coverage, measured-popularity calibration, formal emergency active-puzzle corrections, admin data-import approvals, or production-scale load validation. Review commercial data/name rights and production operations before launch; see `docs/STATUS.md`.
 
 Reusable cloud `install_script` and `start_skill` fields were saved in the environment configuration draft. Saving them does not publish a snapshot; review/save them in environment settings and publish the cloud environment to make that setup reusable. This cloud publication is separate from deploying the web app on Render.
+
+## Render production-install regression
+
+The first hosted build of `c6b11dd` failed to resolve `@/components/brand`. Reproduced from a clean archive of that commit with `NODE_ENV=production npm ci --no-audit --no-fund`: npm omitted development dependencies, and Next could not read TypeScript path aliases without TypeScript installed. Tailwind/PostCSS were also missing.
+
+Added `.npmrc` with `include=dev`, preserving compatibility with the existing Render command. The Blueprint now explicitly uses `npm ci --include=dev --no-audit --no-fund && npm run build`. CI installs with `NODE_ENV=production` so this condition is covered.
+
+Verified in the isolated clean source copy: the original production-mode installation reproduced the reported failure; after adding `.npmrc`, the same installation command installed the required tools and a cold `NODE_ENV=production npm run build` passed webpack compilation, TypeScript checks, and production page generation. No application source or gameplay behavior changed. Actual Render redeployment remains to be observed in the user account.

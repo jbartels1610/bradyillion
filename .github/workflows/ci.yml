@@ -12,12 +12,17 @@ jobs:
         with:
           node-version: '24'
           cache: npm
-      - run: npm ci --no-audit --no-fund
+      - name: Install from a clean production environment, as Render does
+        run: npm ci --no-audit --no-fund
+        env:
+          NODE_ENV: production
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
       - run: npm run data:audit
       - run: npm run build
+        env:
+          NODE_ENV: production
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
